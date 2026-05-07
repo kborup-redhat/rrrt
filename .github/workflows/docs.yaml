@@ -30,7 +30,7 @@ jobs:
           npm install -g honkit
           cd docs/tutorial
           npm init -y
-          npm install gitbook-plugin-mermaid-hybrid
+          npm install gitbook-plugin-mermaid-gb3
 
       - name: Build docs
         run: |
