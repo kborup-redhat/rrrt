@@ -75,6 +75,11 @@ func Run(ctx context.Context, config *rest.Config, clientset *kubernetes.Clients
 		return fmt.Errorf("creating service account: %w", err)
 	}
 
+	if err := createCABundleConfigMap(ctx, clientset, nsName); err != nil {
+		cleanup.Run()
+		return fmt.Errorf("creating CA bundle configmap: %w", err)
+	}
+
 	if err := ensureClusterRole(ctx, clientset); err != nil {
 		cleanup.Run()
 		return fmt.Errorf("ensuring cluster role: %w", err)

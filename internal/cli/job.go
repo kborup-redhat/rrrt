@@ -51,11 +51,30 @@ func buildJob(cfg JobConfig) *batchv1.Job {
 				Spec: corev1.PodSpec{
 					ServiceAccountName: serviceAccountName,
 					RestartPolicy:      corev1.RestartPolicyNever,
+					Volumes: []corev1.Volume{
+						{
+							Name: "serving-ca",
+							VolumeSource: corev1.VolumeSource{
+								ConfigMap: &corev1.ConfigMapVolumeSource{
+									LocalObjectReference: corev1.LocalObjectReference{
+										Name: "rrrt-serving-ca",
+									},
+								},
+							},
+						},
+					},
 					Containers: []corev1.Container{
 						{
 							Name:  "analyzer",
 							Image: cfg.Image,
 							Env:   env,
+							VolumeMounts: []corev1.VolumeMount{
+								{
+									Name:      "serving-ca",
+									MountPath: "/etc/pki/tls/serving-ca",
+									ReadOnly:  true,
+								},
+							},
 						},
 					},
 				},

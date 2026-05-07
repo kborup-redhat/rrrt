@@ -74,6 +74,20 @@ func ensureClusterRole(ctx context.Context, clientset *kubernetes.Clientset) err
 	return err
 }
 
+func createCABundleConfigMap(ctx context.Context, clientset *kubernetes.Clientset, namespace string) error {
+	cm := &corev1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "rrrt-serving-ca",
+			Namespace: namespace,
+			Annotations: map[string]string{
+				"service.beta.openshift.io/inject-cabundle": "true",
+			},
+		},
+	}
+	_, err := clientset.CoreV1().ConfigMaps(namespace).Create(ctx, cm, metav1.CreateOptions{})
+	return err
+}
+
 func createClusterRoleBindings(ctx context.Context, clientset *kubernetes.Clientset, namespace string) ([]string, error) {
 	analyzerCRB := fmt.Sprintf("rrrt-analyzer-%s", namespace)
 	monitoringCRB := fmt.Sprintf("rrrt-monitoring-%s", namespace)

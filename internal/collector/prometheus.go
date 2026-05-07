@@ -39,9 +39,17 @@ func NewPrometheusClient(baseURL, token string) *PrometheusClient {
 		}
 	}
 	tlsCfg := &tls.Config{MinVersion: tls.VersionTLS12}
+	pool := x509.NewCertPool()
+	loaded := false
 	if caCert, err := os.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"); err == nil {
-		pool := x509.NewCertPool()
 		pool.AppendCertsFromPEM(caCert)
+		loaded = true
+	}
+	if caCert, err := os.ReadFile("/etc/pki/tls/serving-ca/service-ca.crt"); err == nil {
+		pool.AppendCertsFromPEM(caCert)
+		loaded = true
+	}
+	if loaded {
 		tlsCfg.RootCAs = pool
 	}
 
