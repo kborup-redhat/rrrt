@@ -21,7 +21,7 @@ jobs:
       - name: Lint
         uses: golangci/golangci-lint-action@v6
         with:
-          version: latest
+          version: v2.12.2
 
       - name: Test
         run: go test ./... -v -race
@@ -43,6 +43,7 @@ jobs:
       - name: Build and push container image
         run: |
           VERSION=${{ steps.version.outputs.VERSION }}
+          echo "${{ secrets.RH_REGISTRY_PASSWORD }}" | podman login -u "${{ secrets.RH_REGISTRY_USERNAME }}" --password-stdin registry.redhat.io
           echo "${{ secrets.QUAY_PASSWORD }}" | podman login -u "${{ secrets.QUAY_USERNAME }}" --password-stdin quay.io
           podman build --build-arg VERSION=${VERSION} -f Containerfile -t quay.io/kborup/rrrt:${VERSION} .
           podman push quay.io/kborup/rrrt:${VERSION}
