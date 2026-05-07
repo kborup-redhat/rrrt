@@ -27,6 +27,7 @@ type RunConfig struct {
 	IncludeOS     bool
 	KeepNamespace bool
 	Timeout       time.Duration
+	Version       string
 }
 
 func Run(ctx context.Context, config *rest.Config, clientset *kubernetes.Clientset, cfg RunConfig) error {
@@ -46,7 +47,11 @@ func Run(ctx context.Context, config *rest.Config, clientset *kubernetes.Clients
 	}
 
 	if cfg.Image == "" {
-		cfg.Image = "quay.io/kborup/rrrt:latest"
+		tag := cfg.Version
+		if tag == "" || tag == "dev" {
+			tag = "latest"
+		}
+		cfg.Image = "quay.io/kborup/rrrt:" + tag
 	}
 
 	prometheusURL := "https://thanos-querier.openshift-monitoring.svc:9091"

@@ -12,7 +12,7 @@ FROM registry.redhat.io/ubi9/ubi-minimal:latest
 
 COPY --from=builder /tmp/rrrt-analyzer /usr/local/bin/rrrt-analyzer
 
-RUN mkdir -p /output
+RUN mkdir -p /output && chgrp 0 /output && chmod g=rwx /output
 
 USER 1001
 

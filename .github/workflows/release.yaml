@@ -47,8 +47,6 @@ jobs:
           echo "${{ secrets.QUAY_PASSWORD }}" | podman login -u "${{ secrets.QUAY_USERNAME }}" --password-stdin quay.io
           podman build --build-arg VERSION=${VERSION} -f Containerfile -t quay.io/kborup/rrrt:${VERSION} .
           podman push quay.io/kborup/rrrt:${VERSION}
-          podman tag quay.io/kborup/rrrt:${VERSION} quay.io/kborup/rrrt:latest
-          podman push quay.io/kborup/rrrt:latest
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v3

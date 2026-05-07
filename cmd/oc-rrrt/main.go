@@ -56,6 +56,7 @@ func main() {
 				IncludeOS:     includeOpenShift,
 				KeepNamespace: keepNamespace,
 				Timeout:       timeout,
+				Version:       version,
 			})
 		},
 	}
