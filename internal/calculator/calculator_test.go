@@ -1,0 +1,96 @@
+package calculator_test
+
+import (
+	"testing"
+
+	"github.com/kborup-redhat/rrrt/internal/calculator"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+)
+
+func TestComputePercentile_Empty(t *testing.T) {
+	assert.Equal(t, 0.0, calculator.ComputePercentile(nil, 95))
+}
+
+func TestComputePercentile_Single(t *testing.T) {
+	assert.InDelta(t, 42.0, calculator.ComputePercentile([]float64{42.0}, 95), 0.01)
+}
+
+func TestComputePercentile_Multiple(t *testing.T) {
+	samples := []float64{10, 20, 30, 40, 50, 60, 70, 80, 90, 100}
+	p95 := calculator.ComputePercentile(samples, 95)
+	assert.InDelta(t, 95.5, p95, 1.0)
+}
+
+func TestAnalyze_Downsize(t *testing.T) {
+	input := calculator.AnalysisInput{
+		CurrentCPU:         8000, // 8 cores in millicores
+		CurrentMem:         16 * 1024 * 1024 * 1024,
+		CPUP95Percent:      28.3,
+		MemP95Percent:      41.7,
+		HeadroomPercent:    20,
+		MinCPUSavings:      1000, // 1 core
+		MinMemSavings:      1 << 30,
+		UpsizeThresholdPct: 90,
+	}
+
+	result := calculator.Analyze(input)
+	require.NotNil(t, result)
+	assert.Equal(t, calculator.Downsize, result.Direction)
+	assert.Less(t, result.RecommendedCPU, input.CurrentCPU)
+	assert.Less(t, result.RecommendedMem, input.CurrentMem)
+	assert.Greater(t, result.CPUSavings, int64(0))
+	assert.Greater(t, result.MemSavings, int64(0))
+}
+
+func TestAnalyze_Upsize(t *testing.T) {
+	input := calculator.AnalysisInput{
+		CurrentCPU:         4000,
+		CurrentMem:         8 * 1024 * 1024 * 1024,
+		CPUP95Percent:      94.0,
+		MemP95Percent:      92.0,
+		HeadroomPercent:    20,
+		MinCPUSavings:      1000,
+		MinMemSavings:      1 << 30,
+		UpsizeThresholdPct: 90,
+	}
+
+	result := calculator.Analyze(input)
+	require.NotNil(t, result)
+	assert.Equal(t, calculator.Upsize, result.Direction)
+	assert.Greater(t, result.RecommendedCPU, input.CurrentCPU)
+	assert.Greater(t, result.RecommendedMem, input.CurrentMem)
+}
+
+func TestAnalyze_NoRecommendation(t *testing.T) {
+	input := calculator.AnalysisInput{
+		CurrentCPU:         4000,
+		CurrentMem:         8 * 1024 * 1024 * 1024,
+		CPUP95Percent:      75.0,
+		MemP95Percent:      75.0,
+		HeadroomPercent:    20,
+		MinCPUSavings:      1000,
+		MinMemSavings:      1 << 30,
+		UpsizeThresholdPct: 90,
+	}
+
+	result := calculator.Analyze(input)
+	assert.Nil(t, result)
+}
+
+func TestAnalyze_ContainerLowThreshold(t *testing.T) {
+	input := calculator.AnalysisInput{
+		CurrentCPU:         1000, // 1 core
+		CurrentMem:         1 * 1024 * 1024 * 1024,
+		CPUP95Percent:      20.0,
+		MemP95Percent:      20.0,
+		HeadroomPercent:    20,
+		MinCPUSavings:      250,       // 250m
+		MinMemSavings:      256 << 20, // 256Mi
+		UpsizeThresholdPct: 90,
+	}
+
+	result := calculator.Analyze(input)
+	require.NotNil(t, result)
+	assert.Equal(t, calculator.Downsize, result.Direction)
+}
