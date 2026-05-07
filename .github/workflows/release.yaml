@@ -1,0 +1,48 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.26'
+
+      - name: Get version
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Build CLI binaries
+        run: |
+          VERSION=${{ steps.version.outputs.VERSION }}
+          LDFLAGS="-s -w -X main.version=${VERSION}"
+
+          GOOS=linux GOARCH=amd64 go build -ldflags="${LDFLAGS}" -o dist/oc-rrrt-linux-amd64 ./cmd/oc-rrrt/
+          GOOS=linux GOARCH=arm64 go build -ldflags="${LDFLAGS}" -o dist/oc-rrrt-linux-arm64 ./cmd/oc-rrrt/
+          GOOS=darwin GOARCH=amd64 go build -ldflags="${LDFLAGS}" -o dist/oc-rrrt-darwin-amd64 ./cmd/oc-rrrt/
+          GOOS=darwin GOARCH=arm64 go build -ldflags="${LDFLAGS}" -o dist/oc-rrrt-darwin-arm64 ./cmd/oc-rrrt/
+
+      - name: Build and push container image
+        run: |
+          VERSION=${{ steps.version.outputs.VERSION }}
+          echo "${{ secrets.QUAY_PASSWORD }}" | podman login -u "${{ secrets.QUAY_USERNAME }}" --password-stdin quay.io
+          podman build --build-arg VERSION=${VERSION} -f Containerfile -t quay.io/kborup/rrrt:${VERSION} .
+          podman push quay.io/kborup/rrrt:${VERSION}
+          podman tag quay.io/kborup/rrrt:${VERSION} quay.io/kborup/rrrt:latest
+          podman push quay.io/kborup/rrrt:latest
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+          generate_release_notes: true
