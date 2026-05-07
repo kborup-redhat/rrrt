@@ -14,6 +14,7 @@ func Generate(data *types.ReportData, outputPath string) error {
 
 	renderCover(p, data)
 	renderSummary(p, data)
+	renderClusterOverview(p, data)
 	renderVMSection(p, data)
 	renderContainerSection(p, data)
 	renderInsufficientData(p, data)

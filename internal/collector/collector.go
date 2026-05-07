@@ -49,9 +49,10 @@ func (c *Collector) Collect(ctx context.Context, namespaces []string) (*types.Re
 	namespaces = c.filterNamespaces(namespaces)
 
 	data := &types.ReportData{
-		LookbackDays: c.lookbackDays,
-		Percentile:   types.DefaultPercentile,
-		HeadroomPct:  c.headroomPct,
+		LookbackDays:    c.lookbackDays,
+		Percentile:      types.DefaultPercentile,
+		HeadroomPct:     c.headroomPct,
+		ClusterOverview: c.collectClusterOverview(ctx),
 	}
 
 	total := len(namespaces)

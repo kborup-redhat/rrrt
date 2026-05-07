@@ -33,6 +33,7 @@ func TestGenerateReport_Empty(t *testing.T) {
 func TestGenerateReport_WithData(t *testing.T) {
 	data := &types.ReportData{
 		ClusterName:  "prod-cluster",
+		ClusterID:    "d4e5f6a7-b8c9-0123-4567-89abcdef0123",
 		GeneratedAt:  "2026-05-07T14:30:00Z",
 		Scope:        "Namespaces: default, production",
 		LookbackDays: 14,
@@ -40,6 +41,22 @@ func TestGenerateReport_WithData(t *testing.T) {
 		HeadroomPct:  20,
 		CLIVersion:   "v0.1.0",
 		ImageVersion: "v0.1.0",
+		ClusterOverview: &types.ClusterOverview{
+			TotalNodes:       12,
+			ReadyNodes:       12,
+			MasterNodes:      3,
+			WorkerNodes:      9,
+			CPUCapacity:      64000,
+			CPUAllocatable:   62000,
+			CPURequested:     42000,
+			CPUUsed:          24300,
+			MemCapacity:      256 << 30,
+			MemAllocatable:   250 << 30,
+			MemRequested:     128 << 30,
+			MemUsed:          89 << 30,
+			StorageRequested: 500 << 30,
+			StorageCapacity:  2048 << 30,
+		},
 		VMAnalyses: []types.ResourceAnalysis{
 			{
 				Namespace: "default", Name: "test-vm", Kind: types.KindVM,

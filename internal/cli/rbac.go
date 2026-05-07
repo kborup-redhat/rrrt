@@ -59,6 +59,11 @@ func ensureClusterRole(ctx context.Context, clientset *kubernetes.Clientset) err
 				Resources: []string{"configmaps"},
 				Verbs:     []string{"get"},
 			},
+			{
+				APIGroups: []string{"config.openshift.io"},
+				Resources: []string{"infrastructures", "clusterversions"},
+				Verbs:     []string{"get"},
+			},
 		},
 	}
 

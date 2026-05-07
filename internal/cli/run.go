@@ -118,7 +118,13 @@ func Run(ctx context.Context, config *rest.Config, clientset *kubernetes.Clients
 
 	outputPath := cfg.Output
 	if outputPath == "" {
-		outputPath = fmt.Sprintf("rrrt-report-%s.pdf", time.Now().Format("2006-01-02T1504"))
+		clusterName := readClusterName(ctx, config, clientset, nsName, podName)
+		if clusterName != "" {
+			outputPath = fmt.Sprintf("rrrt-report-%s-%s.pdf",
+				sanitizeFilename(clusterName), time.Now().Format("2006-01-02T1504"))
+		} else {
+			outputPath = fmt.Sprintf("rrrt-report-%s.pdf", time.Now().Format("2006-01-02T1504"))
+		}
 	}
 
 	fmt.Println("Downloading report...")
@@ -205,5 +211,34 @@ func streamLogs(ctx context.Context, clientset *kubernetes.Clientset, namespace,
 	}
 
 	return false, scanner.Err()
+}
+
+func readClusterName(ctx context.Context, config *rest.Config, clientset *kubernetes.Clientset, namespace, podName string) string {
+	tmpFile := os.TempDir() + "/rrrt-cluster-name.txt"
+	defer func() { _ = os.Remove(tmpFile) }()
+
+	if err := copyFromPod(ctx, config, clientset, namespace, podName, "/output/cluster-name.txt", tmpFile); err != nil {
+		return ""
+	}
+	data, err := os.ReadFile(tmpFile)
+	if err != nil {
+		return ""
+	}
+	return strings.TrimSpace(string(data))
+}
+
+func sanitizeFilename(name string) string {
+	name = strings.ToLower(name)
+	var b strings.Builder
+	for _, r := range name {
+		if (r >= 'a' && r <= 'z') || (r >= '0' && r <= '9') || r == '-' {
+			b.WriteRune(r)
+		}
+	}
+	result := b.String()
+	if result == "" {
+		return "cluster"
+	}
+	return result
 }
 

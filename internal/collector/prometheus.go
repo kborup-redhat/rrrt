@@ -73,6 +73,7 @@ type prometheusResponse struct {
 		ResultType string `json:"resultType"`
 		Result     []struct {
 			Metric map[string]string `json:"metric"`
+			Value  []interface{}     `json:"value"`
 			Values [][]interface{}   `json:"values"`
 		} `json:"result"`
 	} `json:"data"`
@@ -114,6 +115,13 @@ func (c *PrometheusClient) Query(ctx context.Context, query string) ([]MetricSam
 			Name:      result.Metric["name"],
 			Namespace: result.Metric["namespace"],
 			Labels:    result.Metric,
+		}
+		if len(result.Value) >= 2 && len(result.Values) == 0 {
+			if valStr, ok := result.Value[1].(string); ok {
+				if val, err := strconv.ParseFloat(valStr, 64); err == nil {
+					s.Values = append(s.Values, val)
+				}
+			}
 		}
 		for _, v := range result.Values {
 			if len(v) >= 2 {

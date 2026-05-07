@@ -62,13 +62,35 @@ type InsufficientDataEntry struct {
 	ExpectedPoints int
 }
 
+type ClusterOverview struct {
+	TotalNodes  int
+	ReadyNodes  int
+	MasterNodes int
+	WorkerNodes int
+
+	CPUCapacity    int64 // millicores
+	CPUAllocatable int64
+	CPURequested   int64
+	CPUUsed        int64
+
+	MemCapacity    int64 // bytes
+	MemAllocatable int64
+	MemRequested   int64
+	MemUsed        int64
+
+	StorageRequested int64 // bytes
+	StorageCapacity  int64
+}
+
 type ReportData struct {
 	ClusterName       string
+	ClusterID         string
 	GeneratedAt       string
 	Scope             string
 	LookbackDays      int
 	Percentile        int
 	HeadroomPct       int
+	ClusterOverview   *ClusterOverview
 	VMAnalyses        []ResourceAnalysis
 	ContainerAnalyses []ResourceAnalysis
 	InsufficientData  []InsufficientDataEntry

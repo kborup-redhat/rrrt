@@ -48,3 +48,51 @@ func containerMemoryQuery(workloadName, namespace, lookback string) string {
 		SanitizeLabelValue(namespace), SanitizeRegexValue(workloadName), lookback,
 	)
 }
+
+func clusterNodeCountQuery() string {
+	return `count(kube_node_info)`
+}
+
+func clusterReadyNodesQuery() string {
+	return `sum(kube_node_status_condition{condition="Ready",status="true"})`
+}
+
+func clusterControlPlaneNodesQuery() string {
+	return `count(kube_node_role{role="control-plane"})`
+}
+
+func clusterWorkerNodesQuery() string {
+	return `count(kube_node_role{role="worker"})`
+}
+
+func clusterCPUCapacityQuery() string {
+	return `sum(kube_node_status_allocatable{resource="cpu"})`
+}
+
+func clusterCPURequestedQuery() string {
+	return `sum(kube_pod_container_resource_requests{resource="cpu"})`
+}
+
+func clusterCPUUsedQuery() string {
+	return `sum(rate(node_cpu_seconds_total{mode!="idle"}[5m]))`
+}
+
+func clusterMemCapacityQuery() string {
+	return `sum(kube_node_status_allocatable{resource="memory"})`
+}
+
+func clusterMemRequestedQuery() string {
+	return `sum(kube_pod_container_resource_requests{resource="memory"})`
+}
+
+func clusterMemUsedQuery() string {
+	return `sum(node_memory_MemTotal_bytes) - sum(node_memory_MemAvailable_bytes)`
+}
+
+func clusterStorageRequestedQuery() string {
+	return `sum(kube_persistentvolumeclaim_resource_requests_storage_bytes)`
+}
+
+func clusterStorageCapacityQuery() string {
+	return `sum(kube_persistentvolume_capacity_bytes)`
+}

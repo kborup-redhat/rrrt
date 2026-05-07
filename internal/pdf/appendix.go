@@ -31,6 +31,9 @@ func renderAppendix(p *fpdf.Fpdf, data *types.ReportData) {
 	p.SetFont("Helvetica", "", 10)
 	p.CellFormat(0, 6, "CLI Version: "+data.CLIVersion, "", 1, "L", false, 0, "")
 	p.CellFormat(0, 6, "Analyzer Image: "+data.ImageVersion, "", 1, "L", false, 0, "")
+	if data.ClusterID != "" {
+		p.CellFormat(0, 6, "Cluster ID: "+data.ClusterID, "", 1, "L", false, 0, "")
+	}
 
 	p.Ln(20)
 	p.SetFont("Helvetica", "", 9)

@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"os"
 	"os/signal"
 	"strconv"
@@ -60,8 +61,8 @@ func main() {
 	data.CLIVersion = version
 	data.ImageVersion = version
 
-	clusterName := detectClusterName(ctx, k8sClient)
-	data.ClusterName = clusterName
+	data.ClusterID = detectClusterID(ctx, k8sClient)
+	data.ClusterName = detectFriendlyClusterName(ctx, k8sClient, cfg.ConsoleURL, data.ClusterID)
 
 	if len(cfg.Namespaces) > 0 {
 		data.Scope = "Namespaces: " + strings.Join(cfg.Namespaces, ", ")
@@ -83,6 +84,7 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Error generating PDF: %v\n", err)
 		os.Exit(1)
 	}
+	_ = os.WriteFile("/output/cluster-name.txt", []byte(data.ClusterName), 0644)
 
 	fmt.Println("Report generated successfully at /output/report.pdf")
 
@@ -118,19 +120,51 @@ func readConfig() types.AnalyzerConfig {
 	return cfg
 }
 
-func detectClusterName(ctx context.Context, c client.Client) string {
+func detectClusterID(ctx context.Context, c client.Client) string {
 	cv := &unstructured.Unstructured{}
 	cv.SetGroupVersionKind(schema.GroupVersionKind{
 		Group: "config.openshift.io", Version: "v1", Kind: "ClusterVersion",
 	})
 	if err := c.Get(ctx, client.ObjectKey{Name: "version"}, cv); err != nil {
-		return "Unknown Cluster"
+		return ""
 	}
 	id, found, _ := unstructured.NestedString(cv.Object, "spec", "clusterID")
-	if found && id != "" {
+	if found {
 		return id
 	}
-	return "OpenShift Cluster"
+	return ""
+}
+
+func detectFriendlyClusterName(ctx context.Context, c client.Client, consoleURL, clusterID string) string {
+	infra := &unstructured.Unstructured{}
+	infra.SetGroupVersionKind(schema.GroupVersionKind{
+		Group: "config.openshift.io", Version: "v1", Kind: "Infrastructure",
+	})
+	if err := c.Get(ctx, client.ObjectKey{Name: "cluster"}, infra); err == nil {
+		name, found, _ := unstructured.NestedString(infra.Object, "status", "infrastructureName")
+		if found && name != "" {
+			return name
+		}
+	}
+
+	if consoleURL != "" {
+		if parsed, err := url.Parse(consoleURL); err == nil {
+			host := parsed.Hostname()
+			if idx := strings.Index(host, ".apps."); idx >= 0 {
+				remainder := host[idx+len(".apps."):]
+				parts := strings.SplitN(remainder, ".", 2)
+				if parts[0] != "" {
+					return parts[0]
+				}
+			}
+		}
+	}
+
+	if clusterID != "" {
+		return clusterID
+	}
+
+	return "openshift-cluster"
 }
 
 func countCandidates(analyses []types.ResourceAnalysis) int {
