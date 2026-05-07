@@ -5,8 +5,7 @@ on:
     branches: [main]
     paths:
       - 'docs/tutorial/**'
-    tags:
-      - 'v*'
+      - '.github/workflows/docs.yaml'
 
 permissions:
   pages: write
@@ -27,7 +26,11 @@ jobs:
           node-version: '20'
 
       - name: Install HonKit
-        run: npm install -g honkit
+        run: |
+          npm install -g honkit
+          cd docs/tutorial
+          npm init -y
+          npm install gitbook-plugin-mermaid-hybrid
 
       - name: Build docs
         run: |
