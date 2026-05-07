@@ -168,7 +168,7 @@ func streamLogs(ctx context.Context, clientset *kubernetes.Clientset, namespace,
 	if err != nil {
 		return err
 	}
-	defer stream.Close()
+	defer func() { _ = stream.Close() }()
 
 	scanner := bufio.NewScanner(stream)
 	for scanner.Scan() {

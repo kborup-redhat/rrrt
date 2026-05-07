@@ -36,7 +36,7 @@ func copyFromPod(ctx context.Context, config *rest.Config, clientset *kubernetes
 	pr, pw := io.Pipe()
 
 	go func() {
-		defer pw.Close()
+		defer func() { _ = pw.Close() }()
 		err := exec.StreamWithContext(ctx, remotecommand.StreamOptions{
 			Stdout: pw,
 			Stderr: os.Stderr,
@@ -67,10 +67,12 @@ func copyFromPod(ctx context.Context, config *rest.Config, clientset *kubernetes
 				return fmt.Errorf("creating output file: %w", err)
 			}
 			if _, err := io.Copy(out, tr); err != nil {
-				out.Close()
+				_ = out.Close()
 				return fmt.Errorf("writing output file: %w", err)
 			}
-			out.Close()
+			if err := out.Close(); err != nil {
+				return fmt.Errorf("closing output file: %w", err)
+			}
 			return nil
 		}
 	}

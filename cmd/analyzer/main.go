@@ -73,7 +73,10 @@ func main() {
 	fmt.Printf("Found %d rightsizing candidates out of %d resources. Generating PDF...\n",
 		vmCandidates+contCandidates, total)
 
-	os.MkdirAll("/output", 0755)
+	if err := os.MkdirAll("/output", 0755); err != nil {
+		fmt.Fprintf(os.Stderr, "Error creating output directory: %v\n", err)
+		os.Exit(1)
+	}
 	if err := pdf.Generate(data, "/output/report.pdf"); err != nil {
 		fmt.Fprintf(os.Stderr, "Error generating PDF: %v\n", err)
 		os.Exit(1)

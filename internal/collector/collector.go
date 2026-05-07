@@ -96,5 +96,5 @@ func (c *Collector) logProgress(phase, namespace, resource string, index, total 
 		"status":    status,
 	}
 	data, _ := json.Marshal(msg)
-	fmt.Fprintln(os.Stdout, string(data))
+	_, _ = fmt.Fprintln(os.Stdout, string(data))
 }
