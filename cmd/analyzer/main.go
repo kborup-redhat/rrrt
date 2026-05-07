@@ -4,8 +4,10 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"os/signal"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/kborup-redhat/rrrt/internal/collector"
@@ -83,6 +85,10 @@ func main() {
 	}
 
 	fmt.Println("Report generated successfully at /output/report.pdf")
+
+	sigCh := make(chan os.Signal, 1)
+	signal.Notify(sigCh, syscall.SIGTERM, syscall.SIGINT)
+	<-sigCh
 }
 
 func readConfig() types.AnalyzerConfig {

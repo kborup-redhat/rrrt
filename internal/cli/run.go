@@ -8,12 +8,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
-	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 )
@@ -108,13 +107,13 @@ func Run(ctx context.Context, config *rest.Config, clientset *kubernetes.Clients
 		return fmt.Errorf("waiting for pod: %w", err)
 	}
 
-	if err := streamLogs(ctx, clientset, nsName, podName); err != nil {
+	reportReady, err := streamLogs(ctx, clientset, nsName, podName)
+	if err != nil {
 		fmt.Fprintf(os.Stderr, "Warning: log streaming interrupted: %v\n", err)
 	}
-
-	if err := waitForJobCompletion(ctx, clientset, nsName, cfg.Timeout); err != nil {
+	if !reportReady {
 		cleanup.Run()
-		return fmt.Errorf("job failed: %w", err)
+		return fmt.Errorf("analyzer did not generate report — check pod logs in namespace %s", nsName)
 	}
 
 	outputPath := cfg.Output
@@ -164,14 +163,16 @@ func waitForPod(ctx context.Context, clientset *kubernetes.Clientset, namespace 
 	}
 }
 
-func streamLogs(ctx context.Context, clientset *kubernetes.Clientset, namespace, podName string) error {
+const reportReadyMarker = "Report generated successfully"
+
+func streamLogs(ctx context.Context, clientset *kubernetes.Clientset, namespace, podName string) (bool, error) {
 	req := clientset.CoreV1().Pods(namespace).GetLogs(podName, &corev1.PodLogOptions{
 		Follow: true,
 	})
 
 	stream, err := req.Stream(ctx)
 	if err != nil {
-		return err
+		return false, err
 	}
 	defer func() { _ = stream.Close() }()
 
@@ -197,46 +198,12 @@ func streamLogs(ctx context.Context, clientset *kubernetes.Clientset, namespace,
 		} else {
 			fmt.Println(line)
 		}
-	}
 
-	return scanner.Err()
-}
-
-func waitForJobCompletion(ctx context.Context, clientset *kubernetes.Clientset, namespace string, timeout time.Duration) error {
-	watcher, err := clientset.BatchV1().Jobs(namespace).Watch(ctx, metav1.ListOptions{
-		FieldSelector: "metadata.name=rrrt-analyzer",
-	})
-	if err != nil {
-		return err
-	}
-	defer watcher.Stop()
-
-	timeoutCh := time.After(timeout)
-
-	for {
-		select {
-		case event, ok := <-watcher.ResultChan():
-			if !ok {
-				return fmt.Errorf("watch channel closed")
-			}
-			if event.Type == watch.Modified {
-				job, ok := event.Object.(*batchv1.Job)
-				if !ok {
-					continue
-				}
-				for _, cond := range job.Status.Conditions {
-					if cond.Type == batchv1.JobComplete && cond.Status == corev1.ConditionTrue {
-						return nil
-					}
-					if cond.Type == batchv1.JobFailed && cond.Status == corev1.ConditionTrue {
-						return fmt.Errorf("job failed: %s", cond.Message)
-					}
-				}
-			}
-		case <-timeoutCh:
-			return fmt.Errorf("timed out waiting for job completion")
-		case <-ctx.Done():
-			return ctx.Err()
+		if strings.Contains(line, reportReadyMarker) {
+			return true, nil
 		}
 	}
+
+	return false, scanner.Err()
 }
+
