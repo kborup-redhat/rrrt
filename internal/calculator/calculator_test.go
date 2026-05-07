@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/kborup-redhat/rrrt/internal/calculator"
+	"github.com/kborup-redhat/rrrt/internal/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -36,7 +37,7 @@ func TestAnalyze_Downsize(t *testing.T) {
 
 	result := calculator.Analyze(input)
 	require.NotNil(t, result)
-	assert.Equal(t, calculator.Downsize, result.Direction)
+	assert.Equal(t, types.Downsize, result.Direction)
 	assert.Less(t, result.RecommendedCPU, input.CurrentCPU)
 	assert.Less(t, result.RecommendedMem, input.CurrentMem)
 	assert.Greater(t, result.CPUSavings, int64(0))
@@ -57,7 +58,7 @@ func TestAnalyze_Upsize(t *testing.T) {
 
 	result := calculator.Analyze(input)
 	require.NotNil(t, result)
-	assert.Equal(t, calculator.Upsize, result.Direction)
+	assert.Equal(t, types.Upsize, result.Direction)
 	assert.Greater(t, result.RecommendedCPU, input.CurrentCPU)
 	assert.Greater(t, result.RecommendedMem, input.CurrentMem)
 }
@@ -92,5 +93,5 @@ func TestAnalyze_ContainerLowThreshold(t *testing.T) {
 
 	result := calculator.Analyze(input)
 	require.NotNil(t, result)
-	assert.Equal(t, calculator.Downsize, result.Direction)
+	assert.Equal(t, types.Downsize, result.Direction)
 }

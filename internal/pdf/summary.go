@@ -52,7 +52,9 @@ func countCandidates(analyses []types.ResourceAnalysis) int {
 }
 
 func countDirections(vms, containers []types.ResourceAnalysis) (downsize, upsize int) {
-	all := append(vms, containers...)
+	all := make([]types.ResourceAnalysis, 0, len(vms)+len(containers))
+	all = append(all, vms...)
+	all = append(all, containers...)
 	for _, a := range all {
 		switch a.Direction {
 		case types.Downsize:

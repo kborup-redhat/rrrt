@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
+	"strings"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
@@ -52,6 +54,11 @@ func copyFromPod(ctx context.Context, config *rest.Config, clientset *kubernetes
 		}
 		if err != nil {
 			return fmt.Errorf("reading tar: %w", err)
+		}
+
+		clean := filepath.Clean(header.Name)
+		if strings.Contains(clean, "..") {
+			return fmt.Errorf("tar entry contains path traversal: %s", header.Name)
 		}
 
 		if header.Typeflag == tar.TypeReg {

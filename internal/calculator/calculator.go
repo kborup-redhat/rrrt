@@ -3,13 +3,8 @@ package calculator
 import (
 	"math"
 	"sort"
-)
 
-type Direction string
-
-const (
-	Downsize Direction = "downsize"
-	Upsize   Direction = "upsize"
+	"github.com/kborup-redhat/rrrt/internal/types"
 )
 
 type AnalysisInput struct {
@@ -17,8 +12,6 @@ type AnalysisInput struct {
 	CurrentMem         int64   // bytes
 	CPUP95Percent      float64
 	MemP95Percent      float64
-	CPUMaxPercent      float64
-	MemMaxPercent      float64
 	HeadroomPercent    int
 	MinCPUSavings      int64 // millicores
 	MinMemSavings      int64 // bytes
@@ -26,7 +19,7 @@ type AnalysisInput struct {
 }
 
 type AnalysisResult struct {
-	Direction      Direction
+	Direction      types.Direction
 	RecommendedCPU int64
 	RecommendedMem int64
 	CPUSavings     int64
@@ -94,7 +87,7 @@ func analyzeDownsize(input AnalysisInput) *AnalysisResult {
 	}
 
 	return &AnalysisResult{
-		Direction:      Downsize,
+		Direction:      types.Downsize,
 		RecommendedCPU: recCPU,
 		RecommendedMem: recMem,
 		CPUSavings:     cpuSavings,
@@ -124,7 +117,7 @@ func analyzeUpsize(input AnalysisInput) *AnalysisResult {
 	}
 
 	return &AnalysisResult{
-		Direction:      Upsize,
+		Direction:      types.Upsize,
 		RecommendedCPU: recCPU,
 		RecommendedMem: recMem,
 		CPUSavings:     -cpuIncrease,
