@@ -7,17 +7,17 @@ import (
 )
 
 var (
-	clrNavy      = [3]int{30, 58, 95}
-	clrBlue      = [3]int{66, 133, 244}
-	clrGreen     = [3]int{52, 168, 83}
-	clrAmber     = [3]int{251, 188, 4}
-	clrAmberDark = [3]int{180, 130, 0}
-	clrRed       = [3]int{234, 67, 53}
-	clrLightGrey = [3]int{245, 247, 250}
-	clrMidGrey   = [3]int{200, 200, 200}
-	clrDarkText  = [3]int{51, 51, 51}
+	clrNavy      = [3]int{21, 21, 21}       // RH Black #151515
+	clrBlue      = [3]int{238, 0, 0}        // RH Red #EE0000
+	clrGreen     = [3]int{63, 156, 53}      // RH Green #3F9C35
+	clrAmber     = [3]int{240, 171, 0}      // RH Gold #F0AB00
+	clrAmberDark = [3]int{196, 144, 0}
+	clrRed       = [3]int{204, 0, 0}        // RH Dark Red #CC0000
+	clrLightGrey = [3]int{240, 240, 240}    // RH Light Gray #F0F0F0
+	clrMidGrey   = [3]int{210, 210, 210}    // RH Mid Gray #D2D2D2
+	clrDarkText  = [3]int{21, 21, 21}       // RH Black #151515
 	clrWhite     = [3]int{255, 255, 255}
-	clrSubtext   = [3]int{120, 120, 120}
+	clrSubtext   = [3]int{106, 110, 115}    // RH Gray #6A6E73
 )
 
 func setFill(p *fpdf.Fpdf, c [3]int) {

@@ -23,7 +23,7 @@ func renderClusterOverview(p *fpdf.Fpdf, data *types.ReportData) {
 	}
 
 	boxY := p.GetY()
-	setFill(p, [3]int{230, 243, 255})
+	setFill(p, [3]int{252, 235, 235})
 	p.RoundedRect(15, boxY, 180, 14, 2, "1234", "F")
 	setFill(p, clrBlue)
 	p.Rect(15, boxY, 3, 14, "F")

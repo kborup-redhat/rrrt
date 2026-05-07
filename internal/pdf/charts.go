@@ -8,11 +8,11 @@ import (
 )
 
 var (
-	colorBlue  = drawing.Color{R: 66, G: 133, B: 244, A: 255}
-	colorRed   = drawing.Color{R: 234, G: 67, B: 53, A: 255}
-	colorGrey  = drawing.Color{R: 158, G: 158, B: 158, A: 255}
-	colorGreen = drawing.Color{R: 52, G: 168, B: 83, A: 255}
-	colorAmber = drawing.Color{R: 251, G: 188, B: 4, A: 255}
+	colorBlue  = drawing.Color{R: 238, G: 0, B: 0, A: 255}     // RH Red
+	colorRed   = drawing.Color{R: 204, G: 0, B: 0, A: 255}     // RH Dark Red
+	colorGrey  = drawing.Color{R: 106, G: 110, B: 115, A: 255}  // RH Gray
+	colorGreen = drawing.Color{R: 63, G: 156, B: 53, A: 255}    // RH Green
+	colorAmber = drawing.Color{R: 240, G: 171, B: 0, A: 255}    // RH Gold
 )
 
 func renderLineChart(samples []float64, p95 float64, currentAllocation float64, title string, width, height int) ([]byte, error) {
