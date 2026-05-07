@@ -36,6 +36,7 @@ func renderLineChart(samples []float64, p95 float64, currentAllocation float64, 
 		},
 		YAxis: chart.YAxis{
 			Name: "Utilization %",
+			Range: &chart.ContinuousRange{Min: 0, Max: 100},
 			Style: chart.Style{
 				FontSize: 8,
 			},

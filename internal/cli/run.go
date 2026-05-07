@@ -30,6 +30,10 @@ type RunConfig struct {
 }
 
 func Run(ctx context.Context, config *rest.Config, clientset *kubernetes.Clientset, cfg RunConfig) error {
+	if err := requireOpenShift(ctx, clientset); err != nil {
+		return err
+	}
+
 	randBytes := make([]byte, 4)
 	if _, err := rand.Read(randBytes); err != nil {
 		return fmt.Errorf("generating random name: %w", err)

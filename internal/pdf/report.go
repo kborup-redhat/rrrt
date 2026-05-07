@@ -10,7 +10,9 @@ import (
 
 func Generate(data *types.ReportData, outputPath string) error {
 	p := fpdf.New("P", "mm", "A4", "")
-	p.SetAutoPageBreak(true, 15)
+	p.SetAutoPageBreak(true, 20)
+
+	pageFooter(p)
 
 	renderCover(p, data)
 	renderSummary(p, data)
@@ -28,9 +30,8 @@ func renderVMSection(p *fpdf.Fpdf, data *types.ReportData) {
 		return
 	}
 	p.AddPage()
-	p.SetFont("Helvetica", "B", 18)
-	p.CellFormat(0, 10, "Virtual Machines", "", 1, "L", false, 0, "")
-	p.Ln(5)
+	sectionHeader(p, "Virtual Machines")
+	p.Ln(3)
 	renderResourceTable(p, data.VMAnalyses, "Virtual Machines")
 	renderDetailCards(p, data.VMAnalyses)
 }
@@ -40,9 +41,8 @@ func renderContainerSection(p *fpdf.Fpdf, data *types.ReportData) {
 		return
 	}
 	p.AddPage()
-	p.SetFont("Helvetica", "B", 18)
-	p.CellFormat(0, 10, "Containers", "", 1, "L", false, 0, "")
-	p.Ln(5)
+	sectionHeader(p, "Containers")
+	p.Ln(3)
 	renderResourceTable(p, data.ContainerAnalyses, "Containers")
 	renderDetailCards(p, data.ContainerAnalyses)
 }

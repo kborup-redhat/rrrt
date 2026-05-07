@@ -8,14 +8,35 @@ import (
 func renderCover(p *fpdf.Fpdf, data *types.ReportData) {
 	p.AddPage()
 
-	p.SetFont("Helvetica", "B", 28)
-	p.Ln(60)
-	p.CellFormat(0, 15, "Resource Rightsizing Report", "", 1, "C", false, 0, "")
+	setFill(p, clrNavy)
+	p.Rect(0, 0, 210, 90, "F")
 
-	p.Ln(20)
-	p.SetFont("Helvetica", "", 14)
-	p.CellFormat(0, 10, "Cluster: "+data.ClusterName, "", 1, "C", false, 0, "")
-	p.CellFormat(0, 10, "Generated: "+data.GeneratedAt, "", 1, "C", false, 0, "")
-	p.CellFormat(0, 10, "Scope: "+data.Scope, "", 1, "C", false, 0, "")
-	p.CellFormat(0, 10, "Lookback: "+itoa(data.LookbackDays)+" days", "", 1, "C", false, 0, "")
+	setText(p, clrWhite)
+	p.SetFont("Helvetica", "B", 32)
+	p.SetXY(20, 25)
+	p.CellFormat(170, 14, "Resource Rightsizing", "", 1, "L", false, 0, "")
+	p.SetX(20)
+	p.CellFormat(170, 14, "Report", "", 1, "L", false, 0, "")
+
+	p.SetFont("Helvetica", "", 12)
+	p.SetXY(20, 65)
+	p.CellFormat(170, 8, "OpenShift Cluster Analysis", "", 1, "L", false, 0, "")
+
+	setText(p, clrDarkText)
+
+	infoCard(p, 20, 110, 170, [][2]string{
+		{"Cluster", data.ClusterName},
+		{"Scope", data.Scope},
+		{"Lookback", itoa(data.LookbackDays) + " days"},
+		{"Generated", data.GeneratedAt},
+	})
+
+	setFill(p, clrBlue)
+	p.Rect(20, 180, 60, 2, "F")
+
+	p.SetFont("Helvetica", "", 10)
+	setText(p, clrSubtext)
+	p.SetXY(20, 250)
+	p.CellFormat(170, 6, "RRRT "+data.CLIVersion+" - OpenShift Resource Rightsizing Tool", "", 1, "C", false, 0, "")
+	setText(p, clrDarkText)
 }

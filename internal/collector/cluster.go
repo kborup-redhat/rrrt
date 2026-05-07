@@ -2,6 +2,7 @@ package collector
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/kborup-redhat/rrrt/internal/types"
 )
@@ -39,7 +40,11 @@ func (c *Collector) collectClusterOverview(ctx context.Context) *types.ClusterOv
 
 func (c *Collector) queryScalar(ctx context.Context, query string) float64 {
 	samples, err := c.prom.Query(ctx, query)
-	if err != nil || len(samples) == 0 || len(samples[0].Values) == 0 {
+	if err != nil {
+		c.logProgress("cluster", "", "", 0, 0, fmt.Sprintf("query failed: %s: %v", query, err))
+		return 0
+	}
+	if len(samples) == 0 || len(samples[0].Values) == 0 {
 		return 0
 	}
 	return samples[0].Values[0]

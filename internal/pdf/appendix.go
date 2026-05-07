@@ -9,36 +9,35 @@ import (
 
 func renderAppendix(p *fpdf.Fpdf, data *types.ReportData) {
 	p.AddPage()
-	p.SetFont("Helvetica", "B", 16)
-	p.CellFormat(0, 10, "Appendix", "", 1, "L", false, 0, "")
+	sectionHeader(p, "Appendix")
 	p.Ln(5)
 
-	p.SetFont("Helvetica", "B", 12)
-	p.CellFormat(0, 8, "Analysis Settings", "", 1, "L", false, 0, "")
-	p.SetFont("Helvetica", "", 10)
-	p.CellFormat(0, 6, fmt.Sprintf("Percentile: P%d", data.Percentile), "", 1, "L", false, 0, "")
-	p.CellFormat(0, 6, fmt.Sprintf("Headroom: %d%%", data.HeadroomPct), "", 1, "L", false, 0, "")
-	p.CellFormat(0, 6, fmt.Sprintf("Lookback: %d days", data.LookbackDays), "", 1, "L", false, 0, "")
-	p.CellFormat(0, 6, fmt.Sprintf("VM Min CPU Savings: %s", formatCPU(int64(types.DefaultVMMinCPUSavings))), "", 1, "L", false, 0, "")
-	p.CellFormat(0, 6, fmt.Sprintf("VM Min Memory Savings: %s", formatMem(int64(types.DefaultVMMinMemSavings))), "", 1, "L", false, 0, "")
-	p.CellFormat(0, 6, fmt.Sprintf("Container Min CPU Savings: %s", formatCPU(int64(types.DefaultContainerMinCPUSavings))), "", 1, "L", false, 0, "")
-	p.CellFormat(0, 6, fmt.Sprintf("Container Min Memory Savings: %s", formatMem(int64(types.DefaultContainerMinMemSavings))), "", 1, "L", false, 0, "")
-	p.CellFormat(0, 6, fmt.Sprintf("Upsize Threshold: %d%%", types.DefaultUpsizeThreshold), "", 1, "L", false, 0, "")
+	y := settingsCard(p, "Analysis Settings", 15, p.GetY(), 180, [][2]string{
+		{"Percentile", fmt.Sprintf("P%d", data.Percentile)},
+		{"Headroom", fmt.Sprintf("%d%%", data.HeadroomPct)},
+		{"Lookback", fmt.Sprintf("%d days", data.LookbackDays)},
+		{"VM Min CPU Savings", formatCPU(int64(types.DefaultVMMinCPUSavings))},
+		{"VM Min Memory Savings", formatMem(int64(types.DefaultVMMinMemSavings))},
+		{"Container Min CPU Savings", formatCPU(int64(types.DefaultContainerMinCPUSavings))},
+		{"Container Min Memory Savings", formatMem(int64(types.DefaultContainerMinMemSavings))},
+		{"Upsize Threshold", fmt.Sprintf("%d%%", types.DefaultUpsizeThreshold)},
+	})
 
-	p.Ln(10)
-	p.SetFont("Helvetica", "B", 12)
-	p.CellFormat(0, 8, "Version Information", "", 1, "L", false, 0, "")
-	p.SetFont("Helvetica", "", 10)
-	p.CellFormat(0, 6, "CLI Version: "+data.CLIVersion, "", 1, "L", false, 0, "")
-	p.CellFormat(0, 6, "Analyzer Image: "+data.ImageVersion, "", 1, "L", false, 0, "")
+	versionRows := [][2]string{
+		{"CLI Version", data.CLIVersion},
+		{"Analyzer Image", data.ImageVersion},
+	}
 	if data.ClusterID != "" {
-		p.CellFormat(0, 6, "Cluster ID: "+data.ClusterID, "", 1, "L", false, 0, "")
+		versionRows = append(versionRows, [2]string{"Cluster ID", data.ClusterID})
 	}
 
-	p.Ln(20)
+	settingsCard(p, "Version Information", 15, y+8, 180, versionRows)
+
+	p.SetY(-35)
 	p.SetFont("Helvetica", "", 9)
-	p.SetTextColor(100, 100, 100)
-	p.CellFormat(0, 5, "Built with RRRT open source project — github.com/kborup-redhat/rrrt", "", 1, "C", false, 0, "https://github.com/kborup-redhat/rrrt")
-	p.CellFormat(0, 5, "Feedback & issues: github.com/kborup-redhat/rrrt/issues", "", 1, "C", false, 0, "https://github.com/kborup-redhat/rrrt/issues")
-	p.SetTextColor(0, 0, 0)
+	setText(p, clrSubtext)
+	p.CellFormat(0, 5, "Built with RRRT open source project", "", 1, "C", false, 0, "")
+	setText(p, clrBlue)
+	p.CellFormat(0, 5, "github.com/kborup-redhat/rrrt", "", 1, "C", false, 0, "https://github.com/kborup-redhat/rrrt")
+	setText(p, clrDarkText)
 }

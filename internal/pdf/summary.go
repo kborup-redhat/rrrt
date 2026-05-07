@@ -10,34 +10,51 @@ import (
 
 func renderSummary(p *fpdf.Fpdf, data *types.ReportData) {
 	p.AddPage()
-	p.SetFont("Helvetica", "B", 18)
-	p.CellFormat(0, 10, "Executive Summary", "", 1, "L", false, 0, "")
-	p.Ln(5)
+	sectionHeader(p, "Executive Summary")
+	p.Ln(3)
 
 	vmCandidates := countCandidates(data.VMAnalyses)
 	contCandidates := countCandidates(data.ContainerAnalyses)
 	totalAnalyzed := len(data.VMAnalyses) + len(data.ContainerAnalyses)
+	totalCandidates := vmCandidates + contCandidates
 
 	totalCPUSavings := sumCPUSavings(data.VMAnalyses) + sumCPUSavings(data.ContainerAnalyses)
 	totalMemSavings := sumMemSavings(data.VMAnalyses) + sumMemSavings(data.ContainerAnalyses)
 
-	p.SetFont("Helvetica", "", 11)
-	p.CellFormat(0, 7, fmt.Sprintf("Total resources analyzed: %d (%d VMs, %d containers)",
-		totalAnalyzed, len(data.VMAnalyses), len(data.ContainerAnalyses)), "", 1, "L", false, 0, "")
+	cardY := p.GetY()
+	cardW := 55.0
+	cardH := 32.0
+	gap := 7.5
+
+	statCard(p, 15, cardY, cardW, cardH, clrBlue,
+		fmt.Sprintf("%d", totalAnalyzed), "Resources Analyzed")
+
+	statCard(p, 15+cardW+gap, cardY, cardW, cardH, clrGreen,
+		fmt.Sprintf("%d", totalCandidates), "Candidates Found")
+
+	statCard(p, 15+2*(cardW+gap), cardY, cardW, cardH, clrAmber,
+		formatCPU(totalCPUSavings), "CPU Savings")
+
+	p.SetY(cardY + cardH + 8)
 
 	downsizeCount, upsizeCount := countDirections(data.VMAnalyses, data.ContainerAnalyses)
-	p.CellFormat(0, 7, fmt.Sprintf("Rightsizing candidates: %d (%d downsize, %d upsize)",
-		vmCandidates+contCandidates, downsizeCount, upsizeCount), "", 1, "L", false, 0, "")
-	p.CellFormat(0, 7, fmt.Sprintf("Estimated CPU savings: %s", formatCPU(totalCPUSavings)), "", 1, "L", false, 0, "")
-	p.CellFormat(0, 7, fmt.Sprintf("Estimated memory savings: %s", formatMem(totalMemSavings)), "", 1, "L", false, 0, "")
 
-	rightSized := totalAnalyzed - (vmCandidates + contCandidates)
-	chartData, err := renderDonutChart(rightSized, downsizeCount, upsizeCount, 400, 300)
+	p.SetFont("Helvetica", "", 10)
+	setText(p, clrSubtext)
+	p.CellFormat(0, 6, fmt.Sprintf("%d VMs, %d containers analyzed  -  %d downsize, %d upsize  -  %s memory savings",
+		len(data.VMAnalyses), len(data.ContainerAnalyses),
+		downsizeCount, upsizeCount, formatMem(totalMemSavings)), "", 1, "C", false, 0, "")
+	setText(p, clrDarkText)
+
+	rightSized := totalAnalyzed - totalCandidates
+	chartData, err := renderDonutChart(rightSized, downsizeCount, upsizeCount, 450, 350)
 	if err == nil && len(chartData) > 0 {
-		p.Ln(10)
+		p.Ln(8)
 		opt := fpdf.ImageOptions{ImageType: "PNG"}
 		p.RegisterImageOptionsReader("summary_chart", opt, bytes.NewReader(chartData))
-		p.ImageOptions("summary_chart", 40, p.GetY(), 130, 0, false, opt, 0, "")
+		chartW := 120.0
+		chartX := (210 - chartW) / 2
+		p.ImageOptions("summary_chart", chartX, p.GetY(), chartW, 0, false, opt, 0, "")
 	}
 }
 
