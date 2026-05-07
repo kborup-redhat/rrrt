@@ -1,13 +1,10 @@
 package cli
 
 import (
-	"archive/tar"
 	"context"
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
-	"strings"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
@@ -23,7 +20,7 @@ func copyFromPod(ctx context.Context, config *rest.Config, clientset *kubernetes
 		Namespace(namespace).
 		SubResource("exec").
 		VersionedParams(&corev1.PodExecOptions{
-			Command: []string{"tar", "cf", "-", "-C", "/", srcPath[1:]},
+			Command: []string{"cat", srcPath},
 			Stdout:  true,
 			Stderr:  true,
 		}, scheme.ParameterCodec)
@@ -33,49 +30,19 @@ func copyFromPod(ctx context.Context, config *rest.Config, clientset *kubernetes
 		return fmt.Errorf("creating executor: %w", err)
 	}
 
-	pr, pw := io.Pipe()
+	out, err := os.Create(destPath)
+	if err != nil {
+		return fmt.Errorf("creating output file: %w", err)
+	}
+	defer func() { _ = out.Close() }()
 
-	go func() {
-		defer func() { _ = pw.Close() }()
-		err := exec.StreamWithContext(ctx, remotecommand.StreamOptions{
-			Stdout: pw,
-			Stderr: os.Stderr,
-		})
-		if err != nil {
-			pw.CloseWithError(err)
-		}
-	}()
-
-	tr := tar.NewReader(pr)
-	for {
-		header, err := tr.Next()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			return fmt.Errorf("reading tar: %w", err)
-		}
-
-		clean := filepath.Clean(header.Name)
-		if strings.Contains(clean, "..") {
-			return fmt.Errorf("tar entry contains path traversal: %s", header.Name)
-		}
-
-		if header.Typeflag == tar.TypeReg {
-			out, err := os.Create(destPath)
-			if err != nil {
-				return fmt.Errorf("creating output file: %w", err)
-			}
-			if _, err := io.Copy(out, tr); err != nil {
-				_ = out.Close()
-				return fmt.Errorf("writing output file: %w", err)
-			}
-			if err := out.Close(); err != nil {
-				return fmt.Errorf("closing output file: %w", err)
-			}
-			return nil
-		}
+	if err := exec.StreamWithContext(ctx, remotecommand.StreamOptions{
+		Stdout: out,
+		Stderr: io.Discard,
+	}); err != nil {
+		_ = os.Remove(destPath)
+		return fmt.Errorf("streaming file: %w", err)
 	}
 
-	return fmt.Errorf("file not found in tar stream: %s", srcPath)
+	return nil
 }
