@@ -1,4 +1,4 @@
-FROM registry.redhat.io/ubi9/go-toolset:1.22 AS builder
+FROM golang:1.26 AS builder
 
 WORKDIR /build
 COPY go.mod go.sum ./
