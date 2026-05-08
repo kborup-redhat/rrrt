@@ -115,10 +115,13 @@ func (c *Collector) collectContainers(ctx context.Context, namespace string) ([]
 			CurrentMem:         w.memBytes,
 			CPUP95Percent:      cpuP95,
 			MemP95Percent:      memP95,
+			CPUMaxPercent:      cpuMax,
+			MemMaxPercent:      memMax,
 			HeadroomPercent:    c.headroomPct,
 			MinCPUSavings:      types.DefaultContainerMinCPUSavings,
 			MinMemSavings:      types.DefaultContainerMinMemSavings,
 			UpsizeThresholdPct: types.DefaultUpsizeThreshold,
+			LookbackDays:       c.lookbackDays,
 		})
 
 		ownerStr, _ := c.owner.ResolveFromLabels(ctx, w.labels, w.namespace)
@@ -145,7 +148,7 @@ func (c *Collector) collectContainers(ctx context.Context, namespace string) ([]
 			analysis.RecommendedMem = result.RecommendedMem
 			analysis.CPUSavings = result.CPUSavings
 			analysis.MemSavings = result.MemSavings
-			analysis.Justification = buildJustification(analysis)
+			analysis.Justification = result.Reason
 		}
 
 		analyses = append(analyses, analysis)

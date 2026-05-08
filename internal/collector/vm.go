@@ -94,10 +94,13 @@ func (c *Collector) collectVMs(ctx context.Context, namespace string) ([]types.R
 			CurrentMem:         memBytes,
 			CPUP95Percent:      cpuP95,
 			MemP95Percent:      memP95,
+			CPUMaxPercent:      cpuMax,
+			MemMaxPercent:      memMax,
 			HeadroomPercent:    c.headroomPct,
 			MinCPUSavings:      types.DefaultVMMinCPUSavings,
 			MinMemSavings:      types.DefaultVMMinMemSavings,
 			UpsizeThresholdPct: types.DefaultUpsizeThreshold,
+			LookbackDays:       c.lookbackDays,
 		})
 
 		ownerStr, _ := c.owner.ResolveFromLabels(ctx, vm.GetLabels(), ns)
@@ -119,7 +122,7 @@ func (c *Collector) collectVMs(ctx context.Context, namespace string) ([]types.R
 			analysis.RecommendedMem = result.RecommendedMem
 			analysis.CPUSavings = result.CPUSavings
 			analysis.MemSavings = result.MemSavings
-			analysis.Justification = buildJustification(analysis)
+			analysis.Justification = result.Reason
 		}
 
 		analyses = append(analyses, analysis)
@@ -141,34 +144,3 @@ func maxVal(vals []float64) float64 {
 	return m
 }
 
-func buildJustification(a types.ResourceAnalysis) string {
-	cpuCores := float64(a.CurrentCPU) / 1000
-	recCPUCores := float64(a.RecommendedCPU) / 1000
-
-	if a.Direction == types.Downsize {
-		return fmt.Sprintf(
-			"CPU P95 utilization is %.0f%% with %.1f cores allocated. Reducing to %.1f cores provides adequate headroom above P95 and saves %.1f cores. "+
-				"Memory P95 utilization is %.0f%% — recommended allocation reduces memory by %s.",
-			a.CPUP95, cpuCores, recCPUCores, float64(a.CPUSavings)/1000,
-			a.MemP95, formatBytes(a.MemSavings),
-		)
-	}
-	return fmt.Sprintf(
-		"CPU P95 utilization is %.0f%% with %.1f cores allocated, indicating resource pressure. Increasing to %.1f cores targets 70%% utilization. "+
-			"Memory P95 utilization is %.0f%% — recommended increase of %s.",
-		a.CPUP95, cpuCores, recCPUCores,
-		a.MemP95, formatBytes(-a.MemSavings),
-	)
-}
-
-func formatBytes(b int64) string {
-	if b < 0 {
-		b = -b
-	}
-	const gi = 1 << 30
-	const mi = 1 << 20
-	if b >= gi {
-		return fmt.Sprintf("%.1f GiB", float64(b)/float64(gi))
-	}
-	return fmt.Sprintf("%.0f MiB", float64(b)/float64(mi))
-}
