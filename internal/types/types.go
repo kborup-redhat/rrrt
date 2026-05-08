@@ -5,7 +5,7 @@ const (
 	AnnotationExclude = "rightsizing.redhatconsulting.io/exclude"
 
 	DefaultPrometheusURL   = "https://thanos-querier.openshift-monitoring.svc:9091"
-	DefaultLookbackDays    = 14
+	DefaultLookbackDays    = 30
 	DefaultPercentile      = 95
 	DefaultHeadroom        = 20
 	DefaultUpsizeThreshold = 90
@@ -15,6 +15,10 @@ const (
 
 	DefaultContainerMinCPUSavings = 250       // millicores (250m)
 	DefaultContainerMinMemSavings = 256 << 20 // 256 Mi in bytes
+
+	OVRONamespace          = "ovro-system"
+	OVROVictoriaMetricsURL = "http://victoriametrics.ovro-system.svc:8428"
+	OVROCRD                = "rightsizingrecommendations.rightsizing.redhatconsulting.io"
 )
 
 type Direction string
@@ -96,6 +100,7 @@ type ReportData struct {
 	InsufficientData  []InsufficientDataEntry
 	CLIVersion        string
 	ImageVersion      string
+	DataSource        string
 }
 
 type AnalyzerConfig struct {
@@ -104,4 +109,6 @@ type AnalyzerConfig struct {
 	ConsoleURL       string
 	IncludeOpenShift bool
 	PrometheusURL    string
+	NoOVRO           bool
+	OVROEndpoint     string
 }
