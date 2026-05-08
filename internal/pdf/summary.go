@@ -13,6 +13,19 @@ func renderSummary(p *fpdf.Fpdf, data *types.ReportData) {
 	sectionHeader(p, "Executive Summary")
 	p.Ln(3)
 
+	p.SetFont("Helvetica", "", 9)
+	setText(p, clrSubtext)
+	p.MultiCell(180, 4.5,
+		"This report identifies virtual machines and containers in your OpenShift cluster that are using "+
+			"significantly more or less resources (CPU and memory) than they actually need. "+
+			"Oversized workloads waste capacity and increase cost. Undersized workloads risk performance "+
+			"problems and outages. Each recommendation is based on actual utilization data collected over "+
+			fmt.Sprintf("%d days", data.LookbackDays)+", using the 95th percentile to account for normal usage spikes "+
+			"while filtering out rare outliers.",
+		"", "L", false)
+	setText(p, clrDarkText)
+	p.Ln(4)
+
 	vmCandidates := countCandidates(data.VMAnalyses)
 	contCandidates := countCandidates(data.ContainerAnalyses)
 	totalAnalyzed := len(data.VMAnalyses) + len(data.ContainerAnalyses)

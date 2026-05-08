@@ -17,6 +17,19 @@ func renderClusterOverview(p *fpdf.Fpdf, data *types.ReportData) {
 	sectionHeader(p, "Cluster Overview")
 	p.Ln(3)
 
+	p.SetFont("Helvetica", "", 9)
+	setText(p, clrSubtext)
+	p.MultiCell(180, 4.5,
+		"This section shows the overall capacity of your cluster and how much of it is in use. "+
+			"\"Used\" (red bar) is how much CPU or memory workloads are actually consuming right now. "+
+			"\"Requested\" (amber bar) is how much has been reserved by workload configurations - "+
+			"this is the amount the cluster must keep available, even if workloads are not using it all. "+
+			"A large gap between Requested and Used indicates over-provisioning across the cluster. "+
+			"\"Capacity\" is the total available from all worker nodes combined.",
+		"", "L", false)
+	setText(p, clrDarkText)
+	p.Ln(4)
+
 	nodeStatus := "all Ready"
 	if ov.ReadyNodes < ov.TotalNodes {
 		nodeStatus = fmt.Sprintf("%d Ready", ov.ReadyNodes)
