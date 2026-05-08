@@ -47,6 +47,10 @@ func (c *Cleanup) Run() {
 
 	ctx := context.Background()
 
+	// Best-effort cleanup of OVRO NetworkPolicy (created by analyzer if OVRO was detected)
+	_ = c.clientset.NetworkingV1().NetworkPolicies("ovro-system").Delete(
+		ctx, "allow-rrrt-to-victoriametrics", metav1.DeleteOptions{})
+
 	for _, name := range c.crbNames {
 		err := c.clientset.RbacV1().ClusterRoleBindings().Delete(ctx, name, metav1.DeleteOptions{})
 		if err != nil {
@@ -57,6 +61,7 @@ func (c *Cleanup) Run() {
 	err := c.clientset.CoreV1().Namespaces().Delete(ctx, c.namespace, metav1.DeleteOptions{})
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Warning: cleanup failed. Run manually:\n")
+		fmt.Fprintf(os.Stderr, "  oc delete networkpolicy allow-rrrt-to-victoriametrics -n ovro-system\n")
 		for _, name := range c.crbNames {
 			fmt.Fprintf(os.Stderr, "  oc delete clusterrolebinding %s\n", name)
 		}
