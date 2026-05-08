@@ -19,6 +19,8 @@ type JobConfig struct {
 	IncludeOS     bool
 	PrometheusURL string
 	Timeout       time.Duration
+	NoOVRO        bool
+	OVROEndpoint  string
 }
 
 func buildJob(cfg JobConfig) *batchv1.Job {
@@ -37,6 +39,13 @@ func buildJob(cfg JobConfig) *batchv1.Job {
 			Name:  "RRRT_NAMESPACES",
 			Value: strings.Join(cfg.Namespaces, ","),
 		})
+	}
+
+	if cfg.NoOVRO {
+		env = append(env, corev1.EnvVar{Name: "RRRT_NO_OVRO", Value: "true"})
+	}
+	if cfg.OVROEndpoint != "" {
+		env = append(env, corev1.EnvVar{Name: "RRRT_OVRO_ENDPOINT", Value: cfg.OVROEndpoint})
 	}
 
 	return &batchv1.Job{

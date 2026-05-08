@@ -27,6 +27,8 @@ type RunConfig struct {
 	KeepNamespace bool
 	Timeout       time.Duration
 	Version       string
+	NoOVRO        bool
+	OVROEndpoint  string
 }
 
 func Run(ctx context.Context, config *rest.Config, clientset *kubernetes.Clientset, cfg RunConfig) error {
@@ -101,6 +103,8 @@ func Run(ctx context.Context, config *rest.Config, clientset *kubernetes.Clients
 		IncludeOS:     cfg.IncludeOS,
 		PrometheusURL: prometheusURL,
 		Timeout:       cfg.Timeout,
+		NoOVRO:        cfg.NoOVRO,
+		OVROEndpoint:  cfg.OVROEndpoint,
 	})
 
 	fmt.Println("Creating analyzer Job...")

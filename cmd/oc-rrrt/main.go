@@ -28,6 +28,8 @@ func main() {
 	var includeOpenShift bool
 	var keepNamespace bool
 	var timeout time.Duration
+	var noOVRO bool
+	var ovroEndpoint string
 
 	reportCmd := &cobra.Command{
 		Use:   "report",
@@ -57,18 +59,22 @@ func main() {
 				KeepNamespace: keepNamespace,
 				Timeout:       timeout,
 				Version:       version,
+				NoOVRO:        noOVRO,
+				OVROEndpoint:  ovroEndpoint,
 			})
 		},
 	}
 
 	reportCmd.Flags().StringSliceVarP(&namespaces, "namespace", "n", nil, "Namespaces to analyze (can be repeated)")
 	reportCmd.Flags().StringVarP(&output, "output", "o", "", "Output PDF path")
-	reportCmd.Flags().IntVar(&lookbackDays, "lookback-days", 14, "Metrics lookback window in days")
+	reportCmd.Flags().IntVar(&lookbackDays, "lookback-days", 30, "Metrics lookback window in days")
 	reportCmd.Flags().StringVar(&image, "image", "", "Override analyzer container image")
 	reportCmd.Flags().StringVar(&consoleURL, "console-url", "", "OpenShift Console base URL")
 	reportCmd.Flags().BoolVar(&includeOpenShift, "include-openshift", false, "Include openshift-* and kube-* namespaces")
 	reportCmd.Flags().BoolVar(&keepNamespace, "keep-namespace", false, "Don't delete temporary namespace after completion")
 	reportCmd.Flags().DurationVar(&timeout, "timeout", 30*time.Minute, "Maximum time to wait for the Job")
+	reportCmd.Flags().BoolVar(&noOVRO, "no-ovro", false, "Force using Thanos even when OVRO is detected")
+	reportCmd.Flags().StringVar(&ovroEndpoint, "ovro-endpoint", "", "Override VictoriaMetrics endpoint URL (implies OVRO mode)")
 
 	rootCmd.AddCommand(reportCmd)
 
