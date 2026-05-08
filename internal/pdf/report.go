@@ -75,10 +75,3 @@ func formatMem(bytes int64) string {
 	}
 	return fmt.Sprintf("%d MiB", bytes/mi)
 }
-
-func abs64(n int64) int64 {
-	if n < 0 {
-		return -n
-	}
-	return n
-}

@@ -12,7 +12,6 @@ var (
 	clrGreen     = [3]int{63, 156, 53}      // RH Green #3F9C35
 	clrAmber     = [3]int{240, 171, 0}      // RH Gold #F0AB00
 	clrAmberDark = [3]int{196, 144, 0}
-	clrRed       = [3]int{204, 0, 0}        // RH Dark Red #CC0000
 	clrLightGrey = [3]int{240, 240, 240}    // RH Light Gray #F0F0F0
 	clrMidGrey   = [3]int{210, 210, 210}    // RH Mid Gray #D2D2D2
 	clrDarkText  = [3]int{21, 21, 21}       // RH Black #151515
