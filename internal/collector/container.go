@@ -72,8 +72,9 @@ func (c *Collector) collectContainers(ctx context.Context, namespace string) ([]
 		c.logProgress("containers", w.namespace, w.name, i+1, len(workloads), "analyzing")
 
 		lookback := fmt.Sprintf("%dd", c.lookbackDays)
+		step := queryStep(c.lookbackDays)
 
-		cpuSamples, err := c.prom.Query(ctx, containerCPUQuery(w.name, w.namespace, lookback))
+		cpuSamples, err := c.prom.Query(ctx, containerCPUQuery(w.name, w.namespace, lookback, step))
 		if err != nil {
 			continue
 		}
@@ -90,8 +91,9 @@ func (c *Collector) collectContainers(ctx context.Context, namespace string) ([]
 			memVals = append(memVals, s.Values...)
 		}
 
-		expectedPoints := c.lookbackDays * 24 * 60
-		minPoints := 7 * 24 * 60
+		stepMin := queryStepMinutes(c.lookbackDays)
+		expectedPoints := c.lookbackDays * 24 * 60 / stepMin
+		minPoints := 7 * 24 * 60 / stepMin
 		if len(cpuVals) < minPoints {
 			insufficient = append(insufficient, types.InsufficientDataEntry{
 				Namespace: w.namespace, Name: w.name, Kind: w.kind,

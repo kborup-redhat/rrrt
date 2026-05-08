@@ -49,8 +49,9 @@ func (c *Collector) collectVMs(ctx context.Context, namespace string) ([]types.R
 		}
 
 		lookback := fmt.Sprintf("%dd", c.lookbackDays)
+		step := queryStep(c.lookbackDays)
 
-		cpuSamples, err := c.prom.Query(ctx, vmCPUQuery(name, ns, lookback))
+		cpuSamples, err := c.prom.Query(ctx, vmCPUQuery(name, ns, lookback, step))
 		if err != nil {
 			c.logProgress("vms", ns, name, i+1, len(vmList.Items), fmt.Sprintf("error querying CPU: %v", err))
 			continue
@@ -69,8 +70,9 @@ func (c *Collector) collectVMs(ctx context.Context, namespace string) ([]types.R
 			memVals = memSamples[0].Values
 		}
 
-		expectedPoints := c.lookbackDays * 24 * 60
-		minPoints := 7 * 24 * 60
+		stepMin := queryStepMinutes(c.lookbackDays)
+		expectedPoints := c.lookbackDays * 24 * 60 / stepMin
+		minPoints := 7 * 24 * 60 / stepMin
 		if len(cpuVals) < minPoints {
 			insufficient = append(insufficient, types.InsufficientDataEntry{
 				Namespace: ns, Name: name, Kind: types.KindVM,

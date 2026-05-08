@@ -21,10 +21,23 @@ func SanitizeRegexValue(s string) string {
 	return regexp.QuoteMeta(SanitizeLabelValue(s))
 }
 
-func vmCPUQuery(vmName, namespace, lookback string) string {
+func queryStepMinutes(lookbackDays int) int {
+	points := lookbackDays * 24 * 60
+	step := (points / 25000) + 1
+	if step < 1 {
+		step = 1
+	}
+	return step
+}
+
+func queryStep(lookbackDays int) string {
+	return fmt.Sprintf("%dm", queryStepMinutes(lookbackDays))
+}
+
+func vmCPUQuery(vmName, namespace, lookback, step string) string {
 	return fmt.Sprintf(
-		`rate(kubevirt_vmi_cpu_usage_seconds_total{name="%s",namespace="%s"}[5m])[%s:1m]`,
-		SanitizeLabelValue(vmName), SanitizeLabelValue(namespace), lookback,
+		`rate(kubevirt_vmi_cpu_usage_seconds_total{name="%s",namespace="%s"}[5m])[%s:%s]`,
+		SanitizeLabelValue(vmName), SanitizeLabelValue(namespace), lookback, step,
 	)
 }
 
@@ -35,10 +48,10 @@ func vmMemoryQuery(vmName, namespace, lookback string) string {
 	)
 }
 
-func containerCPUQuery(workloadName, namespace, lookback string) string {
+func containerCPUQuery(workloadName, namespace, lookback, step string) string {
 	return fmt.Sprintf(
-		`rate(container_cpu_usage_seconds_total{namespace="%s",pod=~"%s-.*",container!=""}[5m])[%s:1m]`,
-		SanitizeLabelValue(namespace), SanitizeRegexValue(workloadName), lookback,
+		`rate(container_cpu_usage_seconds_total{namespace="%s",pod=~"%s-.*",container!=""}[5m])[%s:%s]`,
+		SanitizeLabelValue(namespace), SanitizeRegexValue(workloadName), lookback, step,
 	)
 }
 
