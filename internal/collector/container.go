@@ -91,7 +91,7 @@ func (c *Collector) collectContainers(ctx context.Context, namespace string) ([]
 		}
 
 		expectedPoints := c.lookbackDays * 24 * 60
-		minPoints := expectedPoints / 2
+		minPoints := 7 * 24 * 60
 		if len(cpuVals) < minPoints {
 			insufficient = append(insufficient, types.InsufficientDataEntry{
 				Namespace: w.namespace, Name: w.name, Kind: w.kind,

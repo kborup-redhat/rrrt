@@ -70,7 +70,7 @@ func (c *Collector) collectVMs(ctx context.Context, namespace string) ([]types.R
 		}
 
 		expectedPoints := c.lookbackDays * 24 * 60
-		minPoints := expectedPoints / 2
+		minPoints := 7 * 24 * 60
 		if len(cpuVals) < minPoints {
 			insufficient = append(insufficient, types.InsufficientDataEntry{
 				Namespace: ns, Name: name, Kind: types.KindVM,

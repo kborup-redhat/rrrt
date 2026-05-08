@@ -31,10 +31,6 @@ func DiscoverOVRO(ctx context.Context, clientset *kubernetes.Clientset, ovroName
 		return OVRODiscoveryResult{Message: "VictoriaMetrics pod not running in " + ovroNamespace}
 	}
 
-	if !ProbeHealth(ctx, vmURL) {
-		return OVRODiscoveryResult{Message: "VictoriaMetrics health probe failed at " + vmURL}
-	}
-
 	return OVRODiscoveryResult{
 		Detected: true,
 		Endpoint: vmURL,

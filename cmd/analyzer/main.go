@@ -18,6 +18,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -70,8 +71,12 @@ func main() {
 			if err := createOVRONetworkPolicy(ctx, clientset, cfg.AnalyzerNamespace); err != nil {
 				fmt.Fprintf(os.Stderr, "Warning: failed to create NetworkPolicy for OVRO access: %v\n", err)
 			}
-			prometheusURL = result.Endpoint
-			dataSource = "OVRO VictoriaMetrics (90d retention)"
+			if collector.ProbeHealth(ctx, result.Endpoint) {
+				prometheusURL = result.Endpoint
+				dataSource = "OVRO VictoriaMetrics (90d retention)"
+			} else {
+				fmt.Println("VictoriaMetrics health probe failed after NetworkPolicy creation, falling back to Thanos")
+			}
 		}
 	}
 
@@ -250,6 +255,9 @@ func createOVRONetworkPolicy(ctx context.Context, clientset *kubernetes.Clientse
 
 	_, err := clientset.NetworkingV1().NetworkPolicies(types.OVRONamespace).Create(ctx, np, metav1.CreateOptions{})
 	if err != nil {
+		if k8serrors.IsAlreadyExists(err) {
+			return nil
+		}
 		return fmt.Errorf("creating network policy: %w", err)
 	}
 	return nil
