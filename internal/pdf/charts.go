@@ -15,7 +15,31 @@ var (
 	colorAmber = drawing.Color{R: 240, G: 171, B: 0, A: 255}    // RH Gold
 )
 
+func downsample(data []float64, maxPoints int) []float64 {
+	if len(data) <= maxPoints {
+		return data
+	}
+	result := make([]float64, maxPoints)
+	bucketSize := float64(len(data)) / float64(maxPoints)
+	for i := 0; i < maxPoints; i++ {
+		start := int(float64(i) * bucketSize)
+		end := int(float64(i+1) * bucketSize)
+		if end > len(data) {
+			end = len(data)
+		}
+		max := data[start]
+		for j := start + 1; j < end; j++ {
+			if data[j] > max {
+				max = data[j]
+			}
+		}
+		result[i] = max
+	}
+	return result
+}
+
 func renderLineChart(samples []float64, p95 float64, currentAllocation float64, title string, width, height int) ([]byte, error) {
+	samples = downsample(samples, width)
 	xValues := make([]float64, len(samples))
 	for i := range samples {
 		xValues[i] = float64(i)
