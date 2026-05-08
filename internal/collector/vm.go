@@ -115,7 +115,6 @@ func (c *Collector) collectVMs(ctx context.Context, namespace string) ([]types.R
 			CurrentCPU: cpuMillis, CurrentMem: memBytes,
 			CPUP95: cpuP95, MemP95: memP95,
 			CPUMax: cpuMax, MemMax: memMax,
-			CPUSamples: cpuVals, MemSamples: memVals,
 		}
 
 		if result != nil {

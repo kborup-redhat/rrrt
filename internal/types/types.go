@@ -53,8 +53,6 @@ type ResourceAnalysis struct {
 	MemP95         float64
 	CPUMax         float64
 	MemMax         float64
-	CPUSamples     []float64 // raw time-series for charts
-	MemSamples     []float64
 	Justification  string
 }
 

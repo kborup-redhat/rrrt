@@ -141,7 +141,6 @@ func (c *Collector) collectContainers(ctx context.Context, namespace string) ([]
 			CurrentCPU: w.cpuMillis, CurrentMem: w.memBytes,
 			CPUP95: cpuP95, MemP95: memP95,
 			CPUMax: cpuMax, MemMax: memMax,
-			CPUSamples: cpuVals, MemSamples: memVals,
 		}
 
 		if result != nil {

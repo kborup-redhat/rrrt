@@ -33,7 +33,6 @@ func renderVMSection(p *fpdf.Fpdf, data *types.ReportData) {
 	sectionHeader(p, "Virtual Machines")
 	p.Ln(3)
 	renderResourceTable(p, data.VMAnalyses, "Virtual Machines")
-	renderDetailCards(p, data.VMAnalyses)
 }
 
 func renderContainerSection(p *fpdf.Fpdf, data *types.ReportData) {
@@ -44,7 +43,6 @@ func renderContainerSection(p *fpdf.Fpdf, data *types.ReportData) {
 	sectionHeader(p, "Containers")
 	p.Ln(3)
 	renderResourceTable(p, data.ContainerAnalyses, "Containers")
-	renderDetailCards(p, data.ContainerAnalyses)
 }
 
 func itoa(n int) string {
