@@ -14,11 +14,12 @@ func TestGenerateReport_Empty(t *testing.T) {
 		ClusterName:  "test-cluster",
 		GeneratedAt:  "2026-05-07T14:30:00Z",
 		Scope:        "All namespaces",
-		LookbackDays: 14,
+		LookbackDays: 30,
 		Percentile:   95,
 		HeadroomPct:  20,
 		CLIVersion:   "v0.1.0",
 		ImageVersion: "v0.1.0",
+		DataSource:   "OpenShift Thanos Querier",
 	}
 
 	tmpFile := t.TempDir() + "/test-report.pdf"
@@ -36,11 +37,12 @@ func TestGenerateReport_WithData(t *testing.T) {
 		ClusterID:    "d4e5f6a7-b8c9-0123-4567-89abcdef0123",
 		GeneratedAt:  "2026-05-07T14:30:00Z",
 		Scope:        "Namespaces: default, production",
-		LookbackDays: 14,
+		LookbackDays: 30,
 		Percentile:   95,
 		HeadroomPct:  20,
 		CLIVersion:   "v0.1.0",
 		ImageVersion: "v0.1.0",
+		DataSource:   "OVRO VictoriaMetrics (90d retention)",
 		ClusterOverview: &types.ClusterOverview{
 			TotalNodes:       12,
 			ReadyNodes:       12,

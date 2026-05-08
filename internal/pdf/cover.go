@@ -28,6 +28,7 @@ func renderCover(p *fpdf.Fpdf, data *types.ReportData) {
 		{"Cluster", data.ClusterName},
 		{"Scope", data.Scope},
 		{"Lookback", itoa(data.LookbackDays) + " days"},
+		{"Data Source", data.DataSource},
 		{"Generated", data.GeneratedAt},
 	})
 
