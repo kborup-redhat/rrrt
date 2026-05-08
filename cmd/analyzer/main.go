@@ -90,9 +90,13 @@ func main() {
 	}
 
 	promClient := collector.NewPrometheusClient(prometheusURL, "")
+	var clusterPromClient *collector.PrometheusClient
+	if prometheusURL != cfg.PrometheusURL {
+		clusterPromClient = collector.NewPrometheusClient(cfg.PrometheusURL, "")
+	}
 	ownerResolver := owner.NewResolver(k8sClient)
 
-	coll := collector.New(k8sClient, promClient, ownerResolver, cfg.ConsoleURL,
+	coll := collector.New(k8sClient, promClient, clusterPromClient, ownerResolver, cfg.ConsoleURL,
 		cfg.LookbackDays, types.DefaultHeadroom, cfg.IncludeOpenShift)
 
 	data, err := coll.Collect(ctx, cfg.Namespaces)

@@ -17,6 +17,7 @@ import (
 type Collector struct {
 	k8s          client.Client
 	prom         *PrometheusClient
+	clusterProm  *PrometheusClient
 	owner        *owner.Resolver
 	consoleURL   string
 	lookbackDays int
@@ -25,9 +26,14 @@ type Collector struct {
 }
 
 // New creates a Collector with the given configuration.
-func New(k8s client.Client, prom *PrometheusClient, ownerResolver *owner.Resolver, consoleURL string, lookbackDays, headroomPct int, includeOpenShift bool) *Collector {
+// clusterProm is used for cluster overview queries (node counts, capacity).
+// If nil, prom is used for everything.
+func New(k8s client.Client, prom, clusterProm *PrometheusClient, ownerResolver *owner.Resolver, consoleURL string, lookbackDays, headroomPct int, includeOpenShift bool) *Collector {
+	if clusterProm == nil {
+		clusterProm = prom
+	}
 	return &Collector{
-		k8s: k8s, prom: prom, owner: ownerResolver,
+		k8s: k8s, prom: prom, clusterProm: clusterProm, owner: ownerResolver,
 		consoleURL: consoleURL, lookbackDays: lookbackDays,
 		headroomPct: headroomPct, includeOS: includeOpenShift,
 	}

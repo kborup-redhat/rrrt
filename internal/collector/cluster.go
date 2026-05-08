@@ -39,7 +39,7 @@ func (c *Collector) collectClusterOverview(ctx context.Context) *types.ClusterOv
 }
 
 func (c *Collector) queryScalar(ctx context.Context, query string) float64 {
-	samples, err := c.prom.Query(ctx, query)
+	samples, err := c.clusterProm.Query(ctx, query)
 	if err != nil {
 		c.logProgress("cluster", "", "", 0, 0, fmt.Sprintf("query failed: %s: %v", query, err))
 		return 0
