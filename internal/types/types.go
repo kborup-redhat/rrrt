@@ -104,11 +104,12 @@ type ReportData struct {
 }
 
 type AnalyzerConfig struct {
-	Namespaces       []string
-	LookbackDays     int
-	ConsoleURL       string
-	IncludeOpenShift bool
-	PrometheusURL    string
-	NoOVRO           bool
-	OVROEndpoint     string
+	Namespaces        []string
+	LookbackDays      int
+	ConsoleURL        string
+	IncludeOpenShift  bool
+	PrometheusURL     string
+	NoOVRO            bool
+	OVROEndpoint      string
+	AnalyzerNamespace string
 }

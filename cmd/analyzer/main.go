@@ -17,9 +17,13 @@ import (
 	"github.com/kborup-redhat/rrrt/internal/types"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	networkingv1 "k8s.io/api/networking/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/client-go/kubernetes"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -42,14 +46,40 @@ func main() {
 		os.Exit(1)
 	}
 
-	promClient := collector.NewPrometheusClient(cfg.PrometheusURL, "")
+	ctx, cancel := context.WithTimeout(context.Background(), 25*time.Minute)
+	defer cancel()
+
+	clientset, err := kubernetes.NewForConfig(restConfig)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error creating clientset: %v\n", err)
+		os.Exit(1)
+	}
+
+	prometheusURL := cfg.PrometheusURL
+	dataSource := "OpenShift Thanos Querier"
+
+	if cfg.OVROEndpoint != "" {
+		prometheusURL = cfg.OVROEndpoint
+		dataSource = "OVRO VictoriaMetrics (custom endpoint)"
+		fmt.Printf("Using custom OVRO endpoint: %s\n", cfg.OVROEndpoint)
+	} else if !cfg.NoOVRO {
+		result := collector.DiscoverOVRO(ctx, clientset,
+			types.OVRONamespace, types.OVROCRD, types.OVROVictoriaMetricsURL)
+		fmt.Println(result.Message)
+		if result.Detected {
+			if err := createOVRONetworkPolicy(ctx, clientset, cfg.AnalyzerNamespace); err != nil {
+				fmt.Fprintf(os.Stderr, "Warning: failed to create NetworkPolicy for OVRO access: %v\n", err)
+			}
+			prometheusURL = result.Endpoint
+			dataSource = "OVRO VictoriaMetrics (90d retention)"
+		}
+	}
+
+	promClient := collector.NewPrometheusClient(prometheusURL, "")
 	ownerResolver := owner.NewResolver(k8sClient)
 
 	coll := collector.New(k8sClient, promClient, ownerResolver, cfg.ConsoleURL,
 		cfg.LookbackDays, types.DefaultHeadroom, cfg.IncludeOpenShift)
-
-	ctx, cancel := context.WithTimeout(context.Background(), 25*time.Minute)
-	defer cancel()
 
 	data, err := coll.Collect(ctx, cfg.Namespaces)
 	if err != nil {
@@ -60,6 +90,7 @@ func main() {
 	data.GeneratedAt = time.Now().UTC().Format(time.RFC3339)
 	data.CLIVersion = version
 	data.ImageVersion = version
+	data.DataSource = dataSource
 
 	data.ClusterID = detectClusterID(ctx, k8sClient)
 	data.ClusterName = detectFriendlyClusterName(ctx, k8sClient, cfg.ConsoleURL, data.ClusterID)
@@ -115,6 +146,15 @@ func readConfig() types.AnalyzerConfig {
 	}
 	if url := os.Getenv("RRRT_PROMETHEUS_URL"); url != "" {
 		cfg.PrometheusURL = url
+	}
+	if os.Getenv("RRRT_NO_OVRO") == "true" {
+		cfg.NoOVRO = true
+	}
+	if ep := os.Getenv("RRRT_OVRO_ENDPOINT"); ep != "" {
+		cfg.OVROEndpoint = ep
+	}
+	if ns, err := os.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/namespace"); err == nil {
+		cfg.AnalyzerNamespace = strings.TrimSpace(string(ns))
 	}
 
 	return cfg
@@ -175,4 +215,42 @@ func countCandidates(analyses []types.ResourceAnalysis) int {
 		}
 	}
 	return count
+}
+
+func createOVRONetworkPolicy(ctx context.Context, clientset *kubernetes.Clientset, fromNamespace string) error {
+	port := intstr.FromInt32(8428)
+	np := &networkingv1.NetworkPolicy{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "allow-rrrt-to-victoriametrics",
+			Namespace: types.OVRONamespace,
+		},
+		Spec: networkingv1.NetworkPolicySpec{
+			PodSelector: metav1.LabelSelector{
+				MatchLabels: map[string]string{"app": "victoriametrics"},
+			},
+			Ingress: []networkingv1.NetworkPolicyIngressRule{
+				{
+					From: []networkingv1.NetworkPolicyPeer{
+						{
+							NamespaceSelector: &metav1.LabelSelector{
+								MatchLabels: map[string]string{
+									"kubernetes.io/metadata.name": fromNamespace,
+								},
+							},
+						},
+					},
+					Ports: []networkingv1.NetworkPolicyPort{
+						{Port: &port},
+					},
+				},
+			},
+			PolicyTypes: []networkingv1.PolicyType{networkingv1.PolicyTypeIngress},
+		},
+	}
+
+	_, err := clientset.NetworkingV1().NetworkPolicies(types.OVRONamespace).Create(ctx, np, metav1.CreateOptions{})
+	if err != nil {
+		return fmt.Errorf("creating network policy: %w", err)
+	}
+	return nil
 }
