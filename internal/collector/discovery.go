@@ -73,7 +73,7 @@ func checkNamespace(ctx context.Context, clientset *kubernetes.Clientset, name s
 
 func checkVictoriaMetricsPod(ctx context.Context, clientset *kubernetes.Clientset, namespace string) bool {
 	pods, err := clientset.CoreV1().Pods(namespace).List(ctx, metav1.ListOptions{
-		LabelSelector: "app=victoriametrics",
+		LabelSelector: "app.kubernetes.io/name=victoriametrics",
 	})
 	if err != nil || len(pods.Items) == 0 {
 		return false

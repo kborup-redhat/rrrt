@@ -231,7 +231,7 @@ func createOVRONetworkPolicy(ctx context.Context, clientset *kubernetes.Clientse
 		},
 		Spec: networkingv1.NetworkPolicySpec{
 			PodSelector: metav1.LabelSelector{
-				MatchLabels: map[string]string{"app": "victoriametrics"},
+				MatchLabels: map[string]string{"app.kubernetes.io/name": "victoriametrics"},
 			},
 			Ingress: []networkingv1.NetworkPolicyIngressRule{
 				{
