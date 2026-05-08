@@ -71,11 +71,20 @@ func main() {
 			if err := createOVRONetworkPolicy(ctx, clientset, cfg.AnalyzerNamespace); err != nil {
 				fmt.Fprintf(os.Stderr, "Warning: failed to create NetworkPolicy for OVRO access: %v\n", err)
 			}
-			if collector.ProbeHealth(ctx, result.Endpoint) {
+			connected := false
+			for attempt := 1; attempt <= 6; attempt++ {
+				if collector.ProbeHealth(ctx, result.Endpoint) {
+					connected = true
+					break
+				}
+				fmt.Printf("VictoriaMetrics health probe attempt %d/6 failed, waiting for NetworkPolicy propagation...\n", attempt)
+				time.Sleep(5 * time.Second)
+			}
+			if connected {
 				prometheusURL = result.Endpoint
 				dataSource = "OVRO VictoriaMetrics (90d retention)"
 			} else {
-				fmt.Println("VictoriaMetrics health probe failed after NetworkPolicy creation, falling back to Thanos")
+				fmt.Println("VictoriaMetrics unreachable after 30s, falling back to Thanos")
 			}
 		}
 	}
