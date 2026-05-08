@@ -265,6 +265,10 @@ func createOVRONetworkPolicy(ctx context.Context, clientset *kubernetes.Clientse
 	_, err := clientset.NetworkingV1().NetworkPolicies(types.OVRONamespace).Create(ctx, np, metav1.CreateOptions{})
 	if err != nil {
 		if k8serrors.IsAlreadyExists(err) {
+			_, err = clientset.NetworkingV1().NetworkPolicies(types.OVRONamespace).Update(ctx, np, metav1.UpdateOptions{})
+			if err != nil {
+				return fmt.Errorf("updating network policy: %w", err)
+			}
 			return nil
 		}
 		return fmt.Errorf("creating network policy: %w", err)

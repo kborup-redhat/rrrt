@@ -72,7 +72,7 @@ func ensureClusterRole(ctx context.Context, clientset *kubernetes.Clientset) err
 			{
 				APIGroups: []string{"networking.k8s.io"},
 				Resources: []string{"networkpolicies"},
-				Verbs:     []string{"get", "create", "delete"},
+				Verbs:     []string{"get", "create", "update", "delete"},
 			},
 		},
 	}
